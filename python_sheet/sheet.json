@@ -58,5 +58,5 @@
         "repulsion_thickness": "10e-3",
         "collision_stiffness": "1e6"
     },
-    "remeshing": "true"
+    "remeshing": "false"
 }
