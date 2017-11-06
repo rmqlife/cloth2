@@ -64,20 +64,20 @@ class arcsim_expert:
         self.expert.apply_hand_c.argtypes = [ct.POINTER(ct.c_double),ct.POINTER(ct.c_double),ct.POINTER(ct.c_double),ct.c_double]
         self.expert.free_vec_c.argtypes = [ct.POINTER(ct.c_double)]
         self.expert.free_veci_c.argtypes = [ct.POINTER(ct.c_int)]
-        #image output sizenss
+        #image output size
         self.w=1024
         self.h=768
         #background color
-        self.bk_r=0
-        self.bk_g=0
-        self.bk_b=0
+        self.bk_r=1
+        self.bk_g=1
+        self.bk_b=1
         #cloth color
         self.cc_r=0.7
         self.cc_g=0.7
-        self.cc_b=1
+        self.cc_b=0.7
         #camera pos
-        self.cx=1.5
-        self.cy=1.5
+        self.cx=2
+        self.cy=2
         self.cz=2
         #focal point
         self.fx=0.5
@@ -91,7 +91,7 @@ class arcsim_expert:
         self.lights=[]
         self.lights=self.lights+[LightSource([0,0,2],'color',[1,1,1])]
         #material
-        self.specular=0.1
+        self.specular=0.4
     #simulation functionality
     def create_sheet(self, x, resX, y, resY,    \
                      path, g, w, wden, wdrag, remesh):
@@ -145,7 +145,6 @@ class arcsim_expert:
     def save_frame(self, path, image):
         if image:
             self.save_frame_image(path+".png")
-            self.save_frame_vtk(path+".vtk")
         else:
             self.save_frame_vtk(path+".vtk")
     def advance(self):
@@ -208,7 +207,29 @@ class arcsim_expert:
                 [xss_c[3],xss_c[4],xss_c[5]],
                 [xss_c[6],xss_c[7],xss_c[8]],
                 [xss_c[9],xss_c[10],xss_c[11]]]
-
+    def illustrate_expert_python(self, x, y, delta, \
+                                 path, nr_frame, nr_pass, expert, image):
+        if os.path.exists(path):
+            shutil.rmtree(path)
+        os.mkdir(path)
+        handles=[[0,0,0],[x,0,0],[0,y,0],[x,y,0]]
+        hands=[[0,0,0],[0,0,0]]
+        j=0
+        for p in range(nr_pass):
+            #pick hand location
+            while True:
+                hands[0] = [random.uniform(-x/4,x/4),random.uniform(-x/4,x/4),random.uniform(-x/4,x/4)]
+                hands[1] = [random.uniform(-x/4,x/4)+x,random.uniform(-x/4,x/4),random.uniform(-x/4,x/4)]
+                if np.linalg.norm(np.subtract(hands[0],hands[1])) < x:
+                    break
+            #test
+            for i in range(nr_frame):
+                self.advance()
+                handles=self.apply_hand(handles,hands,delta)
+                handles =self.apply_expert(handles,expert(handles,x,y),delta)
+                self.set_handle(handles)
+                self.save_frame(path+"/frm"+str(j),image)
+                j=j+1
 
 if __name__== "__main__":
     expert = arcsim_expert()
@@ -217,3 +238,4 @@ if __name__== "__main__":
     #test simulation functionality
     #expert.illustrate_python("./python_sheet_output",100,True)
     #test expert functionality
+    expert.illustrate_expert_python(1,2,0.01,"./python_sheet_expert_output",100,5,expert.expert_twist,True)
