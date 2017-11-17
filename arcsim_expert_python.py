@@ -15,16 +15,16 @@ class ClothMesh(POVRayElement):
         nrI = len(self.iss)
         ret="mesh2{\n"
         ret=ret+"vertex_vectors{%d,\n"%nrV
-        for i in range(nrV):
+        for i in xrange(nrV):
             ret=ret+("<%f,%f,%f>%s")%(self.vss[i][0],self.vss[i][1],self.vss[i][2],("," if i<nrV-1 else ""))
         ret=ret+"}\n"
         if len(self.nss) == nrV:
             ret=ret+"normal_vectors{%d,\n"%nrV
-            for i in range(nrV):
+            for i in xrange(nrV):
                 ret=ret+("<%f,%f,%f>%s")%(self.nss[i][0],self.nss[i][1],self.nss[i][2],("," if i<nrV-1 else ""))
             ret=ret+"}\n"
         ret=ret+"face_indices{%d,\n"%nrI
-        for i in range(nrI):
+        for i in xrange(nrI):
             ret=ret+("<%d,%d,%d>%s")%(self.iss[i][0],self.iss[i][1],self.iss[i][2],("," if i<nrI-1 else ""))
         ret=ret+"}\n"
         ret_additional="".join([str(format_if_necessary(e)) for e in self.args])
@@ -105,7 +105,7 @@ class arcsim_expert:
         self.expert.setup_c(path.encode())
     def set_handle(self, handles):
         ptr = []
-        for i in range(len(handles)):
+        for i in xrange(len(handles)):
             ptr = ptr+[handles[i][0],handles[i][1],handles[i][2]]
         ptr_c =(ct.c_double*len(ptr))(*ptr)
         self.expert.set_handle_c(ptr_c,len(handles))
@@ -123,10 +123,10 @@ class arcsim_expert:
         nss = [[0,0,0]]*nrn_c.value
         iss = [[0,0,0]]*nri_c.value
         assert nrv_c.value == nrn_c.value
-        for i in range(nrv_c.value):
+        for i in xrange(nrv_c.value):
             vss[i]=[vss_c[i*3+0],vss_c[i*3+1],vss_c[i*3+2]]
             nss[i]=[nss_c[i*3+0],nss_c[i*3+1],nss_c[i*3+2]]
-        for i in range(nri_c.value):
+        for i in xrange(nri_c.value):
             iss[i]=[iss_c[i*3+0],iss_c[i*3+1],iss_c[i*3+2]]
         self.expert.free_vec_c(vss_c)
         self.expert.free_vec_c(nss_c)
@@ -145,6 +145,7 @@ class arcsim_expert:
     def save_frame(self, path, image):
         if image:
             self.save_frame_image(path+".png")
+            self.save_frame_vtk(path+".vtk")
         else:
             self.save_frame_vtk(path+".vtk")
     def advance(self):
@@ -155,14 +156,14 @@ class arcsim_expert:
         if os.path.exists(path):
             shutil.rmtree(path)
         os.mkdir(path)
-        for i in range(nr_frame):
+        for i in xrange(nr_frame):
             self.advance()
             self.save_frame(path+"/frm"+str(i),image)
     #expert functionality
     def expert_tpl(self, handles, x, y, func_ptr):
         assert len(handles) == 4
         ptr = []
-        for i in range(len(handles)):
+        for i in xrange(len(handles)):
             ptr = ptr+[handles[i][0],handles[i][1],handles[i][2]]
         ptr_c = (ct.c_double*len(ptr))(*ptr)
         dss_c=func_ptr(ptr_c,x,y)
@@ -179,12 +180,12 @@ class arcsim_expert:
     def apply_expert(self, handles, robot, delta):
         assert len(handles) == 4 and len(robot) == 2
         xss = []
-        for i in range(len(handles)):
+        for i in xrange(len(handles)):
             xss = xss+[handles[i][0],handles[i][1],handles[i][2]]
         xss_c = (ct.c_double*len(xss))(*xss)
 
         dss = []
-        for i in range(len(robot)):
+        for i in xrange(len(robot)):
             dss = dss+[robot[i][0],robot[i][1],robot[i][2]]
         dss_c = (ct.c_double * len(dss))(*dss)
 
@@ -196,7 +197,7 @@ class arcsim_expert:
     def apply_hand(self, handles, hand, delta):
         assert len(handles) == 4 and len(hand) == 2
         xss = []
-        for i in range(len(handles)):
+        for i in xrange(len(handles)):
             xss = xss+[handles[i][0],handles[i][1],handles[i][2]]
         xss_c = (ct.c_double*len(xss))(*xss)
         dss0_c = (ct.c_double * 3)(*(hand[0]))
@@ -215,7 +216,7 @@ class arcsim_expert:
         handles=[[0,0,0],[x,0,0],[0,y,0],[x,y,0]]
         hands=[[0,0,0],[0,0,0]]
         j=0
-        for p in range(nr_pass):
+        for p in xrange(nr_pass):
             #pick hand location
             while True:
                 hands[0] = [random.uniform(-x/4,x/4),random.uniform(-x/4,x/4),random.uniform(-x/4,x/4)]
@@ -223,7 +224,7 @@ class arcsim_expert:
                 if np.linalg.norm(np.subtract(hands[0],hands[1])) < x:
                     break
             #test
-            for i in range(nr_frame):
+            for i in xrange(nr_frame):
                 self.advance()
                 handles=self.apply_hand(handles,hands,delta)
                 handles =self.apply_expert(handles,expert(handles,x,y),delta)
